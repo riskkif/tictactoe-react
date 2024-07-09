@@ -1,70 +1,103 @@
-import { useState } from 'react'
+import React, { useState } from 'react';
 
-function Kotak({ value, handleKotakClick }){
-
-  
-  
-  return <button className='kotak' onClick={handleKotakClick}>
-    {value}
+// Kotak component
+function Kotak({ value, handleKotakClick }) {
+  return (
+    <button className='kotak' onClick={handleKotakClick}>
+      {value}
     </button>
+  );
 }
 
-function App() {
-  const [kotak, setKotak] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState (true);
-
-  function handleClick(i){
-    if(kotak[i] || calculateWinner(Kotak)){
-      return;
-    }
+// Board component
+function Board({ xIsNext, kotak, onPlay }) {
+  function handleClick(i) {
+    if (kotak[i] || calculateWinner(kotak)) return;
 
     const nextKotak = kotak.slice();
-
     nextKotak[i] = xIsNext ? 'X' : 'O';
-    setKotak(nextKotak)
-    setXIsNext(!xIsNext)
-    // const [value, setValuue] = useState ('')
+
+    onPlay(nextKotak);
   }
 
-  const winner = calculateWinner(Kotak);
-  console.log(winner);
+  const winner = calculateWinner(kotak);
+  let status = '';
+  if (winner) {
+    status = 'Winner: ' + winner;
+  } else {
+    status = 'Giliran Jalan: ' + (xIsNext ? 'X' : 'O');
+  }
 
   return (
-    <div className='board'>
-    <Kotak value={kotak[0]} handleKotakClick={() => handleClick(0)}/>
-    <Kotak value={kotak[1]} handleKotakClick={() => handleClick(1)}/>
-    <Kotak value={kotak[2]} handleKotakClick={() => handleClick(2)}/>
-    <Kotak value={kotak[3]} handleKotakClick={() => handleClick(3)}/>
-    <Kotak value={kotak[4]} handleKotakClick={() => handleClick(4)}/>
-    <Kotak value={kotak[5]} handleKotakClick={() => handleClick(5)}/>
-    <Kotak value={kotak[6]} handleKotakClick={() => handleClick(6)}/>
-    <Kotak value={kotak[7]} handleKotakClick={() => handleClick(7)}/>
-    <Kotak value={kotak[8]} handleKotakClick={() => handleClick(8)}/>
-    </div>
-  )
+    <>
+      <div className='status'>{status}</div>
+      <div className='board'>
+        {[...Array(9)].map((_, i) => (
+          <Kotak key={i} value={kotak[i]} handleKotakClick={() => handleClick(i)} />
+        ))}
+      </div>
+    </>
+  );
 }
 
-function calculateWinner(Kotak){
+// Game component
+export default function Game() {
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [currentMove, setCurrentMove] = useState(0);
+  const currentKotak = history[currentMove];
+
+  function handlePlay(nextKotak) {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextKotak];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
+    setXIsNext(!xIsNext);
+  }
+
+  function jumpTo(move) {
+    setCurrentMove(move);
+    setXIsNext(move % 2 === 0);
+  }
+
+  const moves = history.map((_, move) => {
+    const description = move > 0 ? 'Go to move #' + move : 'Go to game start';
+    return (
+      <li key={move}>
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
+
+  return (
+    <div className='game'>
+      <div className='game-board'>
+        <Board xIsNext={xIsNext} kotak={currentKotak} onPlay={handlePlay} />
+      </div>
+      <div className='game-info'>
+        <ol>{moves}</ol>
+      </div>
+    </div>
+  );
+}
+
+// Function to calculate the winner
+function calculateWinner(kotak) {
   const lines = [
-    [0,1,2],
-    [3,4,5],
-    [6,7,8],
-    [0,3,6],
-    [1,4,7],
-    [2,5,8],
-    [0,4,8],
-    [2,4,6],
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
   ];
 
-  for (let i = 0; i < lines.length; i++ ){
-    const [a,b,c]= lines[i];
-    // if(kotak[a])
-    if(Kotak[a] && Kotak[a] === Kotak[b] && Kotak[b]){
-      return Kotak[a];
-    } 
-
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (kotak[a] && kotak[a] === kotak[b] && kotak[a] === kotak[c]) {
+      return kotak[a];
+    }
   }
-  return false;
+  return null;
 }
-
-export default App
