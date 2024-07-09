@@ -14,9 +14,10 @@ function App() {
   const [xIsNext, setXIsNext] = useState (true);
 
   function handleClick(i){
-    if(kotak[i]){
+    if(kotak[i] || calculateWinner(Kotak)){
       return;
     }
+
     const nextKotak = kotak.slice();
 
     nextKotak[i] = xIsNext ? 'X' : 'O';
@@ -25,6 +26,8 @@ function App() {
     // const [value, setValuue] = useState ('')
   }
 
+  const winner = calculateWinner(Kotak);
+  console.log(winner);
 
   return (
     <div className='board'>
@@ -56,8 +59,12 @@ function calculateWinner(Kotak){
   for (let i = 0; i < lines.length; i++ ){
     const [a,b,c]= lines[i];
     // if(kotak[a])
+    if(Kotak[a] && Kotak[a] === Kotak[b] && Kotak[b]){
+      return Kotak[a];
+    } 
 
   }
+  return false;
 }
 
 export default App
